@@ -1,0 +1,11 @@
+#lang planet neil/sicp
+(define (my-cons a b)
+  (* (expt 2 a) (expt 3 b)))
+(define (biggest-power-factor a base)
+  (if (= (remainder a base) 0)
+      (+ (biggest-power-factor (/ a base) base) 1)
+      0))
+(define (my-car z)
+  (biggest-power-factor z 2))
+(define (my-cdr z)
+  (biggest-power-factor z 3))

@@ -1,0 +1,17 @@
+#lang planet neil/sicp
+(define (fermat-test? n)
+  (check-fermat-test n 1))
+(define (check-fermat-test n a)
+  (cond ((= n a) #t)
+        ((not (= (expmod a n n) a)) #f)
+        (else (check-fermat-test n (+ a 1)))))
+(define (expmod base exp m)
+  (cond ((= exp 0) 1)
+        ((even? exp)
+         (remainder (square (expmod base (/ exp 2) m))
+                    m))
+        (else
+         (remainder (* base (expmod base (- exp 1) m))
+                    m))))
+(define (square a)
+  (* a a))

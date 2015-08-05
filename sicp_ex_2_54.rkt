@@ -1,0 +1,11 @@
+#lang scheme
+(define (my-equal? a b)
+  (cond ((and (null? a) (null? b)) #t)
+        ((or (null? a) (null? b)) #f)
+        ((and (not (pair? a))
+              (not (pair? b)))
+         (eq? a b))
+        ((and (pair? a) (pair? b))
+         (and (my-equal? (car a) (car b))
+           (my-equal? (cdr a) (cdr b))))
+        (else #f)))
