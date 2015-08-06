@@ -1,5 +1,7 @@
 #lang planet neil/sicp
 
+;; TODO: add-terms, negate-terms, mul-terms for dense termlist
+
 ;; SYMBOLIC ALGEBRA
 ; ex 2.90: implement both sparse and dense termlist representations.
 ; Implement as two packages, and generic termlist procedures called
@@ -93,7 +95,11 @@
   (define (first-term term-list)
     (make-term (- (length term-list) 1)
                (car term-list)))
-  (define (rest-terms term-list) (cdr term-list))
+  (define (rest-terms term-list)
+    ; strip off leading 0 terms
+    (cond ((null? term-list) term-list)
+          ((eq? 0 (cadr term-list)) (rest-terms (cdr term-list)))
+          (else (cdr term-list))))
   (define (empty-termlist? term-list) (null? term-list))
   (define (make-term term-order coeff)
     (define (make-term-iter result)
@@ -116,11 +122,11 @@
   (define (tag-termlist L) (attach-tag 'dense-termlist L))
   (put 'order '(dense-term) dense-order)
   (put 'coeff '(dense-term) dense-coeff)
+  (put 'empty-termlist? '(dense-termlist) empty-termlist?)
   (put 'first-term '(dense-termlist)
        (lambda (L) (tag-term (first-term L))))
   (put 'rest-terms '(dense-termlist)
-       ; strip off leading 0 terms here?
-       (lambda (L) (tag-term (rest-terms L))))
+       (lambda (L) (tag-termlist (rest-terms L))))
   (put 'make 'dense-term
        (lambda (order coeff) (tag-term (make-term order coeff))))
   (put 'make 'dense-termlist
@@ -132,17 +138,18 @@
 
 (define (make-dense-term order coeff)
   ((get 'make 'dense-term) order coeff))
+; assume each list-of-terms has type-tag of 'dense-term, which
+; needs to be stripped off before sending to internal functions
 (define (adjoin-dense-term raw-term raw-termlist)
-  ((get 'adjoin '(dense-term dense-termlist)) raw-term raw-termlist))
+  ((get 'adjoin '(dense-term dense-termlist))
+   (contents raw-term) (contents raw-termlist)))
 (define (make-dense-termlist list-of-terms)
-  ; assume each list-of-terms has type-tag of 'dense-term, which
-  ; needs to be stripped off before sending to internal functions
   ((get 'make 'dense-termlist) (map contents list-of-terms)))
 
 (define (install-sparse-termlist)
    ;; representation of terms and term lists
   (define (adjoin-term term term-list)
-    (if (=zero? (coeff term))
+    (if (=zero? (sparse-coeff term))
         term-list
         (cons term term-list)))
   (define (the-empty-termlist) '())
@@ -170,7 +177,7 @@
                      t2 (add-terms L1 (rest-terms L2))))
                    (else
                     (adjoin-term
-                     (make-term (order t1)
+                     (make-term (sparse-order t1)
                                 (add (sparse-coeff t1)
                                      (sparse-coeff t2)))
                      (add-terms (rest-terms L1)
@@ -203,8 +210,7 @@
   (put 'first-term '(sparse-termlist)
        (lambda (L) (tag-term (first-term L))))
   (put 'rest-terms '(sparse-termlist)
-       ; strip off leading 0 terms here?
-       (lambda (L) (tag-term (rest-terms L))))
+       (lambda (L) (tag-termlist (rest-terms L))))
   (put 'make 'sparse-term
        (lambda (order coeff) (tag-term (make-term order coeff))))
   (put 'make 'sparse-termlist
@@ -551,6 +557,7 @@
   ;; internal procedures
   ; ex 2.86: multiple types for parts requires use of generic add, etc.
   ; for any procedure that uses real-part or imag-part.
+  ; IMPORTANT NOTE: breaks package for untagged real-part and imag-part
   (define (add-complex z1 z2)
     (make-from-real-imag (add (my-real-part z1) (my-real-part z2))
                          (add (my-imag-part z1) (my-imag-part z2))))
