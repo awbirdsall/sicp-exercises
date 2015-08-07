@@ -1,7 +1,5 @@
 #lang planet neil/sicp
 
-;; TODO: add-terms, negate-terms, mul-terms for dense termlist
-
 ;; SYMBOLIC ALGEBRA
 ; ex 2.90: implement both sparse and dense termlist representations.
 ; Implement as two packages, and generic termlist procedures called
@@ -121,6 +119,44 @@
                      (make-termlist (cdr list-of-terms)))))
   (define (dense-order term) (- (length term) 1))
   (define (dense-coeff term) (car term))
+  (define (add-terms L1 L2)
+    (cond ((empty-termlist? L1) L2)
+          ((empty-termlist? L2) L1)
+          (else
+           (let ((t1 (first-term L1)) (t2 (first-term L2)))
+             (cond ((> (dense-order t1) (dense-order t2))
+                    (adjoin-term
+                     t1 (add-terms (rest-terms L1) L2)))
+                   ((< (dense-order t1) (dense-order t2))
+                    (adjoin-term
+                     t2 (add-terms L1 (rest-terms L2))))
+                   (else
+                    (adjoin-term
+                     (make-term (dense-order t1)
+                                (add (dense-coeff t1)
+                                     (dense-coeff t2)))
+                     (add-terms (rest-terms L1)
+                                (rest-terms L2)))))))))
+  (define (negate-terms L)
+    (if (empty-termlist? L)
+        L
+        (adjoin-term
+         (make-term (dense-order (first-term L))
+                    (negate (dense-coeff (first-term L))))
+         (negate-terms (rest-terms L)))))
+  (define (mul-terms L1 L2)
+    (if (empty-termlist? L1)
+        (the-empty-termlist)
+        (add-terms (mul-term-by-all-terms (first-term L1) L2)
+                   (mul-terms (rest-terms L1) L2))))
+  (define (mul-term-by-all-terms t1 L)
+    (if (empty-termlist? L)
+        (the-empty-termlist)
+        (let ((t2 (first-term L)))
+          (adjoin-term
+           (make-term (+ (dense-order t1) (dense-order t2))
+                      (mul (dense-coeff t1) (dense-coeff t2)))
+           (mul-term-by-all-terms t1 (rest-terms L))))))
   ; interface to rest of system
   (define (tag-term L) (attach-tag 'dense-term L))
   (define (tag-termlist L) (attach-tag 'dense-termlist L))
@@ -135,6 +171,12 @@
        (lambda (order coeff) (tag-term (make-term order coeff))))
   (put 'make 'dense-termlist
        (lambda (list-of-terms) (tag-termlist (make-termlist list-of-terms))))
+  (put 'add-terms '(dense-termlist dense-termlist)
+       (lambda (L1 L2) (tag-termlist (add-terms L1 L2))))
+  (put 'negate-terms '(dense-termlist)
+       (lambda (L) (tag-termlist (negate-terms L))))
+  (put 'mul-terms '(dense-termlist dense-termlist)
+       (lambda (L1 L2) (tag-termlist (mul-terms L1 L2))))
   (put 'adjoin '(dense-term dense-termlist)
        (lambda (term termlist)
          (tag-termlist (adjoin-term term termlist))))
