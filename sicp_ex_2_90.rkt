@@ -98,6 +98,10 @@
   (define (rest-terms term-list)
     ; strip off leading 0 terms
     (cond ((null? term-list) term-list)
+          ; handle edge case of (list 0)
+          ((and (null? (cdr term-list))
+                (eq? 0 (car term-list)))
+           (the-empty-termlist))
           ((eq? 0 (cadr term-list)) (rest-terms (cdr term-list)))
           (else (cdr term-list))))
   (define (empty-termlist? term-list) (null? term-list))
