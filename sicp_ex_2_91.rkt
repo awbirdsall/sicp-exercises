@@ -62,11 +62,15 @@
                               (term-list p2)))
         (error "Polys not in same var -- MUL-POLY"
                (list p1 p2))))
+  ; ex 2.91. div-poly returns list of two polynomials, quotient
+  ; and remainder
   (define (div-poly p1 p2)
     (if (same-variable? (variable p1) (variable p2))
-        (make-poly (variable p1)
-                   (div-terms (term-list p1)
-                              (term-list p2)))
+        (let ((div-result (div-terms (term-list p1) (term-list p2))))
+          (list (make-poly (variable p1)
+                           (car div-result))
+                (make-poly (variable p1)
+                           (cadr div-result))))
         (error "Polys not in same var -- DIV-POLY"
                (list p1 p2))))
   ;; interface to the rest of the system
@@ -75,8 +79,9 @@
        (lambda (p1 p2) (tag (add-poly p1 p2))))
   (put 'mul '(polynomial polynomial)
        (lambda (p1 p2) (tag (mul-poly p1 p2))))
+  ; div-poly output is list of two polynomials
   (put 'div '(polynomial polynomial)
-       (lambda (p1 p2) (tag (div-poly p1 p2))))
+       (lambda (p1 p2) (map tag (div-poly p1 p2))))
   (put 'negate '(polynomial)
        (lambda (p) (tag (negate-poly p))))
   (put 'sub '(polynomial polynomial)
@@ -210,7 +215,8 @@
   (put 'mul-terms '(dense-termlist dense-termlist)
        (lambda (L1 L2) (tag-termlist (mul-terms L1 L2))))
   (put 'div-terms '(dense-termlist dense-termlist)
-       (lambda (L1 L2) (tag-termlist (div-terms L1 L2))))
+       ; ex 2.91 div-terms returns list of quotient and remainder termlists
+       (lambda (L1 L2) (map tag-termlist (div-terms L1 L2))))
   (put 'adjoin '(dense-term dense-termlist)
        (lambda (term termlist)
          (tag-termlist (adjoin-term term termlist))))
@@ -298,6 +304,7 @@
                       (div-terms (add-terms L1
                                             (negate-terms subtract-off))
                                  L2)))
+                ; TODO: correct remainder term from bunch of nested single-item lists
                 (list (adjoin-term quotient-first-term (car rest-of-result))
                       (cdr rest-of-result))
                 )))))
@@ -324,7 +331,8 @@
   (put 'mul-terms '(sparse-termlist sparse-termlist)
        (lambda (L1 L2) (tag-termlist (mul-terms L1 L2))))
   (put 'div-terms '(sparse-termlist sparse-termlist)
-       (lambda (L1 L2) (tag-termlist (div-terms L1 L2))))
+       ; ex 2.91 div-terms returns list of quotient and remainder termlists
+       (lambda (L1 L2) (map tag-termlist (div-terms L1 L2))))
   (put 'empty-termlist? '(sparse-termlist) empty-termlist?)
   'done)
 
@@ -806,7 +814,10 @@
                       (error "No method for these types"
                              (list op type-tags))))
                 ; third, see if raise can be used to coerce all args
-                ; to the highest-type using tower-of-types
+                ; to the highest-type using tower-of-types. Should really
+                ; check whether types are even in tower-of-types before
+                ; trying this because otherwise leads to confusing error
+                ; rather than desired "No method for these types".
                 (let* ((high-type (highest-type args tower-of-types))
                        (raised-args (raise-all-to-type args high-type))
                        (raised-tags (map type-tag raised-args))
