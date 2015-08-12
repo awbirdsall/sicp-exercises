@@ -183,16 +183,15 @@
               (list (the-empty-termlist) L1)
               (let* ((new-c (div (dense-coeff t1) (dense-coeff t2)))
                      (new-o (- (dense-order t1) (dense-order t2)))
-                     (quotient-first-term (make-term new-o new-c))
-                     (subtract-off (mul-terms L2
-                                             (make-termlist (list quotient-first-term))))
+                     (quotient-first-term (make-termlist (list (make-term new-o new-c))))
+                     (subtract-off (mul-terms L2 quotient-first-term))
                      (rest-of-result
                       (div-terms (add-terms L1
                                             (negate-terms subtract-off))
                                  L2)))
-                (list (adjoin-term quotient-first-term (car rest-of-result))
-                      (cdr rest-of-result))
-                )))))
+                (map add-terms
+                     (list quotient-first-term (the-empty-termlist))
+                     rest-of-result))))))
   ; interface to rest of system
   (define (tag-term L) (attach-tag 'dense-term L))
   (define (tag-termlist L) (attach-tag 'dense-termlist L))
@@ -296,17 +295,15 @@
               (list (the-empty-termlist) L1)
               (let* ((new-c (div (sparse-coeff t1) (sparse-coeff t2)))
                      (new-o (- (sparse-order t1) (sparse-order t2)))
-                     (quotient-first-term (make-term new-o new-c))
-                     (subtract-off (mul-terms L2
-                                             (make-termlist (list quotient-first-term))))
+                     (quotient-first-term (make-termlist (list (make-term new-o new-c))))
+                     (subtract-off (mul-terms L2 quotient-first-term))
                      (rest-of-result
                       (div-terms (add-terms L1
                                             (negate-terms subtract-off))
                                  L2)))
-                ; TODO: correct remainder term from bunch of nested single-item lists
-                (list (adjoin-term quotient-first-term (car rest-of-result))
-                      (cdr rest-of-result))
-                )))))
+                (map add-terms
+                     (list quotient-first-term (the-empty-termlist))
+                     rest-of-result))))))
   ;; interface to rest of system
   (define (tag-term L) (attach-tag 'sparse-term L))
   (define (tag-termlist L) (attach-tag 'sparse-termlist L))
