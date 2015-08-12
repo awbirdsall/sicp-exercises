@@ -112,12 +112,11 @@
     (make-term (- (length term-list) 1)
                (car term-list)))
   (define (rest-terms term-list)
-    ; strip off leading 0 terms
+    ; Written to strip off leading 0 terms
+    ; rest-terms of empty-termlist is empty-termlist
     (cond ((null? term-list) term-list)
-          ; handle edge case of (list 0)
-          ((and (null? (cdr term-list))
-                (eq? 0 (car term-list)))
-           (the-empty-termlist))
+          ; handle single-item list before calling cadr
+          ((null? (cdr term-list)) (the-empty-termlist))
           ((eq? 0 (cadr term-list)) (rest-terms (cdr term-list)))
           (else (cdr term-list))))
   (define (empty-termlist? term-list) (null? term-list))
