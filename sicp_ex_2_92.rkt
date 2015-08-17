@@ -26,6 +26,9 @@
 ; dispatch highest-symbol within polynomial pacakge, with call to
 ; compare-symbol-termlist that dispatches to termlist package
 (define (highest-symbol p) (apply-generic 'highest-symbol p))
+; expand termlist to list of terms each containing a single power of each
+; variable
+(define (expand-termlist L) (apply-generic 'expand-termlist L))
 
 ; generic termlist procedures
 (define (first-term L) (apply-generic 'first-term L))
@@ -350,6 +353,25 @@
             (else (compare-symbol-termlist-iter (rest-terms working-L)
                                        (higher-symbol result (variable (sparse-coeff (first-term working-L))))))))
     (compare-symbol-termlist-iter L base-symbol))
+  (define (expand-termlist L)
+    ; perform recursive expansion of polynomial coefficients but don't mess with variable ordering
+    ; want to collect "tree fringes" where leaves are terms with non-poly coeff
+    (define (expand-term t1)
+      (define (not-poly-coeff? x)
+        (not (eq? (type-tag (sparse-coeff x)) 'polynomial)))
+      (if (not-poly-coeff? t1)
+        ; assume no weird nesting of polynomial within non-polynomial coeff
+          t1
+          (let ((inner-termlist (term-list (sparse-coeff t1))))
+            ; wrap each term returned by expand-termlist as appropriate poly
+            (map (lambda (x) (make-polynomial (variable (sparse-coeff t1))
+                                              (make-termlist (list (make-term (sparse-order x))))))
+                 (expand-termlist inner-termlist)))))
+    (cond ((null? L) L)
+          ; each list item in L is a sparse-term (internal representation) that needs expanding
+          (else (map expand-term L))))
+
+            
   ;; interface to rest of system
   (define (tag-term L) (attach-tag 'sparse-term L))
   (define (tag-termlist L) (attach-tag 'sparse-termlist L))
@@ -378,6 +400,8 @@
   (put 'empty-termlist? '(sparse-termlist) empty-termlist?)
   (put 'compare-symbol-termlist '(sparse-termlist symbol)
        compare-symbol-termlist)
+  (put 'expand-termlist '(sparse-termlist)
+       (lambda (L) (tag-termlist (expand-termlist L))))
   'done)
 
 (define (make-sparse-term order coeff)
