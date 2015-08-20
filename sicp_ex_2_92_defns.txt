@@ -9,3 +9,8 @@
 (define p3 (make-polynomial 'z t3))
 (define t4 (make-sparse-termlist (list (make-sparse-term 3 p3))))
 (define p4 (make-polynomial 'y t4))
+
+(define (wrap x) (list 2 (make-polynomial 'x
+                                            (contents
+                                             (make-sparse-termlist
+                                              (list (make-sparse-term (car x) (cadr x))))))))
