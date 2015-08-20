@@ -367,12 +367,14 @@
           (list t1)
           ; otherwise, wrap each term (list item) from recursive expand-sparse-termlist call as
           ; poly coeff of parent term t1
-          ; unpacking `contents` of `term-list` assumes that all inner term-lists are represented as
-          ; sparse-termlist! Code does not check this!
+          ; Unpacking `contents` of `term-list` assumes that all inner term-lists are represented as
+          ; sparse-termlist! Code does not check this.
+          ; Conversely, need then to attach 'sparse-termlist tag in wrapper... kind of an abuse of system where
+          ; this should be part of the interface...? Whatever.
           (let ((inner-termlist (contents (term-list (sparse-coeff t1)))))
             (map (lambda (x) (make-term (sparse-order t1)
                                         (make-polynomial (variable (sparse-coeff t1))
-                                                         (make-termlist (list x)))))
+                                                         (attach-tag 'sparse-termlist (make-termlist (list x))))))
                  (expand-sparse-termlist inner-termlist)))))
     (cond ((null? L) L)
           (else (append (expand-term (first-term L))
