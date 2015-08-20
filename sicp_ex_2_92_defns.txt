@@ -7,10 +7,20 @@
 (define t3 (make-sparse-termlist (list (make-sparse-term 2 p1)
                                          (make-sparse-term 1 p2))))
 (define p3 (make-polynomial 'z t3))
+; multiply-nested term-list
 (define t4 (make-sparse-termlist (list (make-sparse-term 3 p3))))
+; test unequal nesting
+(define t5 (make-sparse-termlist (list (make-sparse-term 3 p3)
+                                         (make-sparse-term 1 (make-rational 3 2)))))
+; polynomial with outermost polynomial in middle of polynomial order (x, y, z)
 (define p4 (make-polynomial 'y t4))
 
+; like lambda function within expand-term but for use outside package
 (define (wrap x) (list 2 (make-polynomial 'x
                                             (contents
                                              (make-sparse-termlist
                                               (list (make-sparse-term (car x) (cadr x))))))))
+
+; debugging of expand-termlist t4
+(define x (car (contents (expand-termlist t3))))
+(define poly-of-interest (cadr (car (map contents (list (make-sparse-term (car x) (cadr x)))))))
