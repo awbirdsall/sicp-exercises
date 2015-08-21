@@ -19,6 +19,23 @@
         (str2 (symbol->string s2)))
     (if (string<? str1 str2) s1 s2)))
 
+; 2.92 procedures to swap outer and inner poly levels of a poly containing an expanded termlist
+(define (swap-poly-level p inner-poly)
+  ; add guard for non-poly inner-poly
+  (let* ((inner-order (order (first-term (term-list inner-poly))))
+         (inner-coeff (coeff (first-term (term-list inner-poly)))))
+    (make-polynomial (variable inner-poly)
+                     (make-sparse-termlist (list (make-sparse-term
+                                                  inner-order
+                                                  (make-polynomial (variable p)
+                                                                   (make-sparse-termlist (list (make-sparse-term
+                                                                                                (order (first-term (term-list p)))
+                                                                                                inner-coeff))))))))))
+; creates list of polys in inner-poly
+(define (swap-poly-full p)
+  (let ((inner-polys (coeff-map (term-list p))))
+    (map (lambda (x) (swap-poly-level p x)) inner-polys)))
+
 ; dispatch compare-symbol-termlist within dense-termlist or sparse-termlist
 ; package
 (define (compare-symbol-termlist L symbol)
@@ -29,6 +46,8 @@
 ; expand termlist to list of terms each containing a single power of each
 ; variable
 (define (expand-termlist L) (apply-generic 'expand-termlist L))
+
+(define (coeff-map L) (apply-generic 'coeff-map L))
 
 ; generic termlist procedures
 (define (first-term L) (apply-generic 'first-term L))
@@ -98,6 +117,7 @@
   ; ex 2.92: determine highest-symbol
   (define (highest-symbol p)
     (compare-symbol-termlist (term-list p) (variable p)))
+
   ;; interface to the rest of the system
   (define (tag p) (attach-tag 'polynomial p))
   (put 'variable '(polynomial) variable)
@@ -344,6 +364,11 @@
                 (map add-terms
                      (list quotient-first-term (the-empty-termlist))
                      rest-of-result))))))
+  (define (coeff-map L)
+    ; return list of coeff (top level, not nested) given sparse-termlist.
+    ; code relies on sparse-termlist internally being list of terms --
+    ; could do it more generically with first-term/rest-terms, but whatever.
+    (map sparse-coeff L))
   (define (compare-symbol-termlist L base-symbol)
     ; search through coefficients for higher variable than base-symbol
     (define (compare-symbol-termlist-iter working-L result)
@@ -380,6 +405,7 @@
           (else (append (expand-term (first-term L))
                         (expand-sparse-termlist (rest-terms L))))))
 
+
             
   ;; interface to rest of system
   (define (tag-term L) (attach-tag 'sparse-term L))
@@ -411,6 +437,7 @@
        compare-symbol-termlist)
   (put 'expand-termlist '(sparse-termlist)
        (lambda (L) (tag-termlist (expand-sparse-termlist L))))
+  (put 'coeff-map '(sparse-termlist) coeff-map)
   'done)
 
 (define (make-sparse-term order coeff)

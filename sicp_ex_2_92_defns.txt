@@ -1,4 +1,5 @@
-﻿(define t1 (make-sparse-termlist (list (make-sparse-term 1 (make-integer 3))
+﻿(install-all-packages)
+(define t1 (make-sparse-termlist (list (make-sparse-term 1 (make-integer 3))
                                          (make-sparse-term 0 (make-integer 1)))))
 (define t2 (make-sparse-termlist (list (make-sparse-term 2 (make-integer 1))
                                          (make-sparse-term 1 (make-integer 1)))))
@@ -14,6 +15,9 @@
                                          (make-sparse-term 1 (make-rational 3 2)))))
 ; polynomial with outermost polynomial in middle of polynomial order (x, y, z)
 (define p4 (make-polynomial 'y t4))
+(define p4exp (make-polynomial 'y (expand-termlist t4)))
+(define p5 (make-polynomial 'y t5))
+(define p5exp (make-polynomial 'y (expand-termlist t5)))
 
 ; like lambda function within expand-term but for use outside package
 (define (wrap x) (list 2 (make-polynomial 'x
