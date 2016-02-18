@@ -1,5 +1,7 @@
 #lang planet neil/sicp
 
+;; INCOMPLETE WORK ON 2.92
+
 ;; SYMBOLIC ALGEBRA
 ; ex 2.90: implement both sparse and dense termlist representations.
 ; Implement as two packages, and generic termlist procedures called
