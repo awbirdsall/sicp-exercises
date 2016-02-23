@@ -379,6 +379,8 @@
 ; ex 2.83
 (define tower-of-types '(integer rational real complex))
 (define (raise x)
+ ; input: x, tagged with type in tower-of-types
+ ; output: x coerced to one type higher in tower (or x if already at top)
   (define (apply-raise types)
     (cond ((null? types)
            (error "type not found in tower-of-types -- RAISE" (list x types)))
@@ -392,6 +394,8 @@
 ; ex 2.85: 'simplify' a data object by dropping down tower of types
 ; as far as possible.
 (define (drop x)
+ ; input: x, with type-tag having installed `project` procedure
+ ; output: x projected down as many times as possible
   (if (not (get 'project (list (type-tag x))))
       x
       (if (equ? (raise (project x)) x)
@@ -488,6 +492,7 @@
   'done)
 
 (define (make-integer n)
+  
   ((get 'make 'integer) n))
 
 ; ex 2.93: modify rational-arithmetic to use generic operations.
@@ -525,8 +530,9 @@
     (make-rat (sub (numer x)) (denom x)))
   (define (=zero? x)
     (=zero? (numer x)))
-  (define (project x)
-    (round (div (numer x) (denom x))))
+  ; ex 2.93: remove project
+  ;(define (project x)
+  ;  (round (div (numer x) (denom x))))
   ;; interface to rest of the system
   (define (tag x) (attach-tag 'rational x))
   (put 'add '(rational rational)
@@ -541,8 +547,8 @@
        (lambda (x y) (equ? x y)))
   (put '=zero? '(rational)
        (lambda (x) (=zero? x)))
-  (put 'project '(rational)
-       (lambda (x) (attach-tag 'integer (project x))))
+  ;(put 'project '(rational)
+  ;     (lambda (x) (attach-tag 'integer (project x))))
   (put 'negate '(rational)
        (lambda (x) (tag (negate x))))
   

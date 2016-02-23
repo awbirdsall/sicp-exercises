@@ -1,0 +1,5 @@
+﻿(define p1 (make-polynomial 'x (make-sparse-termlist (list (make-sparse-term 2 (make-integer 1))
+                                                           (make-sparse-term 0 (make-integer 1))))))
+(define p2 (make-polynomial 'x (make-sparse-termlist (list (make-sparse-term 3 (make-integer 1))
+                                                           (make-sparse-term 0 (make-integer 1))))))
+(define rf (make-rational p2 p1))
