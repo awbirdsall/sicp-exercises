@@ -20,7 +20,7 @@
 ; (define q1 (mul p1 p2))
 ; (define q2 (mul p1 p3))
 ; (greatest-common-divisor q1 q2)
-; ex 2.95: (a) implement pseudoremainder-terms, use in gcd-terms
+; ex 2.96: (a) implement pseudoremainder-terms, use in gcd-terms
 ;          (b) modify gcd-terms to reduce result (divide by coeff gcd)
 (define (greatest-common-divisor a b) (apply-generic 'greatest-common-divisor a b))
 
@@ -37,6 +37,7 @@
 (define (mul-terms L1 L2) (apply-generic 'mul-terms L1 L2))
 (define (div-terms L1 L2) (apply-generic 'div-terms L1 L2))
 (define (remainder-terms L1 L2) (apply-generic 'remainder-terms L1 L2))
+(define (pseudoremainder-terms L1 L2) (apply-generic 'pseudoremainder-terms L1 L2))
 (define (gcd-terms L1 L2) (apply-generic 'gcd-terms L1 L2))
 
 (define (install-polynomial-package)
@@ -221,9 +222,9 @@
     (cadr (div-terms L1 L2)))
   (define (pseudoremainder-terms L1 L2)
     (let* ((int-factor (exp (dense-coeff (first-term L2))
-                            (+ 1 (- (dense-order (first-term L1))
-                                    (dense-order (first-term L2))))))
-           (pseudo-L1 (mul int-factor L1)))
+                            (add (make-integer 1) (sub (make-integer (dense-order (first-term L1)))
+                                                       (make-integer (dense-order (first-term L2)))))))
+           (pseudo-L1 (mul-term-by-all-terms (make-term 0 int-factor) L1)))
       (cadr (div-terms pseudo-L1 L2))))
   (define (gcd-terms L1 L2)
     (if (empty-termlist? L2)
@@ -254,6 +255,8 @@
        (lambda (L1 L2) (map tag-termlist (div-terms L1 L2))))
   (put 'remainder-terms '(dense-termlist dense-termlist)
        (lambda (L1 L2) (tag-termlist (remainder-terms L1 L2))))
+  (put 'pseudoremainder-terms '(dense-termlist dense-termlist)
+       (lambda (L1 L2) (tag-termlist (pseudoremainder-terms L1 L2))))
   (put 'gcd-terms '(dense-termlist dense-termlist)
        (lambda (L1 L2) (tag-termlist (gcd-terms L1 L2))))
   (put 'adjoin '(dense-term dense-termlist)
@@ -353,9 +356,9 @@
     (cadr (div-terms L1 L2)))
   (define (pseudoremainder-terms L1 L2)
     (let* ((int-factor (exp (sparse-coeff (first-term L2))
-                            (+ 1 (- (sparse-order (first-term L1))
-                                    (sparse-order (first-term L2))))))
-           (pseudo-L1 (mul int-factor L1)))
+                            (add (make-integer 1) (sub (make-integer (sparse-order (first-term L1)))
+                                                       (make-integer (sparse-order (first-term L2)))))))
+           (pseudo-L1 (mul-term-by-all-terms (make-term 0 int-factor) L1)))
       (cadr (div-terms pseudo-L1 L2))))
   (define (gcd-terms L1 L2)
     (if (empty-termlist? L2)
@@ -388,6 +391,8 @@
        (lambda (L1 L2) (map tag-termlist (div-terms L1 L2))))
   (put 'remainder-terms '(sparse-termlist sparse-termlist)
        (lambda (L1 L2) (tag-termlist (remainder-terms L1 L2))))
+  (put 'pseudoremainder-terms '(sparse-termlist sparse-termlist)
+       (lambda (L1 L2) (tag-termlist (pseudoremainder-terms L1 L2))))
   (put 'gcd-terms '(sparse-termlist sparse-termlist)
        (lambda (L1 L2) (tag-termlist (gcd-terms L1 L2))))
   (put 'empty-termlist? '(sparse-termlist) empty-termlist?)
@@ -420,6 +425,7 @@
 (define (my-imag-part z) (apply-generic 'imag-part z))
 (define (magnitude z) (apply-generic 'magnitude z))
 (define (angle z) (apply-generic 'angle z))
+
 
 (define (exp x y) (apply-generic 'exp x y)) ; ex 2.81
 
