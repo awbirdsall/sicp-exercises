@@ -355,15 +355,34 @@
   (define (remainder-terms L1 L2)
     (cadr (div-terms L1 L2)))
   (define (pseudoremainder-terms L1 L2)
+    ; include intergerizing factor to avoid fractions in result
     (let* ((int-factor (exp (sparse-coeff (first-term L2))
                             (add (make-integer 1) (sub (make-integer (sparse-order (first-term L1)))
                                                        (make-integer (sparse-order (first-term L2)))))))
            (pseudo-L1 (mul-term-by-all-terms (make-term 0 int-factor) L1)))
       (cadr (div-terms pseudo-L1 L2))))
   (define (gcd-terms L1 L2)
-    (if (empty-termlist? L2)
+    (define (pseudogcd-terms L1 L2)
+      ; returns GCD termlist, but possibly times a scalar factor
+      (if (empty-termlist? L2)
         L1
         (gcd-terms L2 (pseudoremainder-terms L1 L2))))
+    (define (gcd-coeffs L1)
+      (let ((coeffs-list (map sparse-coeff L1)))
+        (cond ((null? coeffs-list) (make-integer 1))
+              ((null? (cdr coeffs-list)) (car coeffs-list))
+              ((null? (cddr coeffs-list)) (greatest-common-divisor
+                                           (car coeffs-list)
+                                           (cdr coeffs-list)))
+              (else (let ((gcd-first-two
+                           (greatest-common-divisor (car coeffs-list) (cadr coeffs-list)))))
+                    (gcd-coeffs (adjoin-term gcd-first-two (cddr coeffs-list)))))))
+    (let* ((unfactored-gcd-terms (pseudogcd-terms L1 L2))
+           (scalar-gcd-termlist
+            (make-termlist (list
+                            (make-term 0 (gcd-coeffs unfactored-gcd-terms))))))
+      (car (div-terms unfactored-gcd-terms scalar-gcd-termlist))))
+      
   ;; interface to rest of system
   (define (tag-term L) (attach-tag 'sparse-term L))
   (define (tag-termlist L) (attach-tag 'sparse-termlist L))
