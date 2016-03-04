@@ -366,17 +366,22 @@
       ; returns GCD termlist, but possibly times a scalar factor
       (if (empty-termlist? L2)
         L1
-        (gcd-terms L2 (pseudoremainder-terms L1 L2))))
+        (pseudogcd-terms L2 (pseudoremainder-terms L1 L2))))
     (define (gcd-coeffs L1)
-      (let ((coeffs-list (map sparse-coeff L1)))
-        (cond ((null? coeffs-list) (make-integer 1))
-              ((null? (cdr coeffs-list)) (car coeffs-list))
-              ((null? (cddr coeffs-list)) (greatest-common-divisor
-                                           (car coeffs-list)
-                                           (cdr coeffs-list)))
-              (else (let ((gcd-first-two
-                           (greatest-common-divisor (car coeffs-list) (cadr coeffs-list)))))
-                    (gcd-coeffs (adjoin-term gcd-first-two (cddr coeffs-list)))))))
+      (gcd-coeff-list (map sparse-coeff L1)))
+    (define (gcd-coeff-list xx)
+      (cond ((null? xx) (make-integer 1)) ; not sure best way to treat?
+            ; edge case starting with list length one
+            ((null? (cdr xx)) (car xx))
+            ; list length two is terminating step
+            ((null? (cddr xx)) (greatest-common-divisor
+                                         (car xx)
+                                         (cadr xx)))
+            ; otherwise gcd of list is gcd of (gcd of first two terms)
+            ; and remainder of terms.
+            (else (let ((gcd-first-two
+                         (greatest-common-divisor (car xx) (cadr xx))))
+                    (gcd-coeff-list (cons gcd-first-two (cddr xx)))))))
     (let* ((unfactored-gcd-terms (pseudogcd-terms L1 L2))
            (scalar-gcd-termlist
             (make-termlist (list
@@ -557,6 +562,8 @@
        (lambda (x y) (tag (expt x y))))
   (put 'equ? '(integer integer)
        (lambda (x y) (= x y)))
+  (put 'greatest-common-divisor '(integer integer)
+       (lambda (x y) (tag (gcd x y))))
   (put '=zero? '(integer)
        (lambda (x) (= x 0)))
   ; ex 2.88
