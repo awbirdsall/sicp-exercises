@@ -227,9 +227,31 @@
            (pseudo-L1 (mul-term-by-all-terms (make-term 0 int-factor) L1)))
       (cadr (div-terms pseudo-L1 L2))))
   (define (gcd-terms L1 L2)
-    (if (empty-termlist? L2)
+    (define (pseudogcd-terms L1 L2)
+      ; returns GCD termlist, but possibly times a scalar factor
+      (if (empty-termlist? L2)
         L1
-        (gcd-terms L2 (pseudoremainder-terms L1 L2))))
+        (pseudogcd-terms L2 (pseudoremainder-terms L1 L2))))
+    (define (gcd-coeffs L1)
+      (gcd-coeff-list (map dense-coeff L1))) ; PROBLEM HERE
+    (define (gcd-coeff-list xx)
+      (cond ((null? xx) (make-integer 1)) ; not sure best way to treat?
+            ; edge case starting with list length one
+            ((null? (cdr xx)) (car xx))
+            ; list length two is terminating step
+            ((null? (cddr xx)) (greatest-common-divisor
+                                         (car xx)
+                                         (cadr xx)))
+            ; otherwise gcd of list is gcd of (gcd of first two terms)
+            ; and remainder of terms.
+            (else (let ((gcd-first-two
+                         (greatest-common-divisor (car xx) (cadr xx))))
+                    (gcd-coeff-list (cons gcd-first-two (cddr xx)))))))
+    (let* ((unfactored-gcd-terms (pseudogcd-terms L1 L2))
+           (scalar-gcd-termlist
+            (make-termlist (list
+                            (make-term 0 (gcd-coeffs unfactored-gcd-terms))))))
+      (car (div-terms unfactored-gcd-terms scalar-gcd-termlist))))
   ; interface to rest of system
   (define (tag-term L) (attach-tag 'dense-term L))
   (define (tag-termlist L) (attach-tag 'dense-termlist L))
