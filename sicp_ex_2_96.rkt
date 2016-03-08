@@ -233,7 +233,15 @@
         L1
         (pseudogcd-terms L2 (pseudoremainder-terms L1 L2))))
     (define (gcd-coeffs L1)
-      (gcd-coeff-list (map dense-coeff L1))) ; PROBLEM HERE
+      ; convert termlist to list of coefficients to pass to
+      ; gcd-coeff-list.
+      ; dense termlist is already list of coeff, but prune out 0s
+      (define (prune-zeros L1)
+        (if (null? L1) L1
+            (if (eq? 0 (car L1))
+                (prune-zeros (cdr L1))
+                (cons (car L1) (prune-zeros (cdr L1))))))
+      (gcd-coeff-list (prune-zeros L1)))
     (define (gcd-coeff-list xx)
       (cond ((null? xx) (make-integer 1)) ; not sure best way to treat?
             ; edge case starting with list length one
