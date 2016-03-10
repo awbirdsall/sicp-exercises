@@ -39,6 +39,7 @@
 (define (remainder-terms L1 L2) (apply-generic 'remainder-terms L1 L2))
 (define (pseudoremainder-terms L1 L2) (apply-generic 'pseudoremainder-terms L1 L2))
 (define (gcd-terms L1 L2) (apply-generic 'gcd-terms L1 L2))
+(define (reduce-terms L1 L2) (apply-generic 'reduce-terms L1 L2))
 
 (define (install-polynomial-package)
   ;; interal procedures
@@ -420,23 +421,25 @@
                   (gcd-coeff-list (cons gcd-first-two (cddr xx)))))))    
   ; ex 2.97
   (define (reduce-terms n d)
-    (let* ((nd-gcd (make-termlist (list (make-term 0 (gcd-terms n d)))))
-           (larger-order (if (> (sparse-order n) (sparse-order d))
-                             (sparse-order n)
-                             (sparse-order d)))
+    (let* ((nd-gcd (gcd-terms n d))
+           (larger-order (if (> (sparse-order (first-term n))
+                                (sparse-order (first-term d)))
+                             (sparse-order (first-term n))
+                             (sparse-order (first-term d))))
            (int-factor (exp (sparse-coeff (first-term nd-gcd))
-                            (+ 1
-                               (- larger-order (sparse-order nd-gcd)))))
+                            (add (make-integer 1)
+                                 (sub (make-integer larger-order)
+                                      (make-integer (sparse-order (first-term nd-gcd)))))))
            (int-factor-termlist (make-termlist
                                  (list (make-term 0 int-factor))))
-           (n-large-coeff (div-terms (mul-terms n int-factor) nd-gcd))
-           (d-large-coeff (div-terms (mul-terms d int-factor) nd-gcd))
+           (n-large-coeff (car (div-terms (mul-terms n int-factor-termlist) nd-gcd)))
+           (d-large-coeff (car (div-terms (mul-terms d int-factor-termlist) nd-gcd)))
            (coeff-gcd (gcd-coeff-list (append (map sparse-coeff n-large-coeff)
                                               (map sparse-coeff d-large-coeff))))
            (coeff-gcd-termlist
             (make-termlist (list (make-term 0 coeff-gcd)))))
-      (list (div-terms n-large-coeff coeff-gcd-termlist)
-            (div-terms d-large-coeff coeff-gcd-termlist))))
+      (list (car (div-terms n-large-coeff coeff-gcd-termlist))
+            (car (div-terms d-large-coeff coeff-gcd-termlist)))))
   ;; interface to rest of system
   (define (tag-term L) (attach-tag 'sparse-term L))
   (define (tag-termlist L) (attach-tag 'sparse-termlist L))
@@ -468,6 +471,8 @@
        (lambda (L1 L2) (tag-termlist (pseudoremainder-terms L1 L2))))
   (put 'gcd-terms '(sparse-termlist sparse-termlist)
        (lambda (L1 L2) (tag-termlist (gcd-terms L1 L2))))
+  (put 'reduce-terms '(sparse-termlist sparse-termlist)
+       (lambda (L1 L2) (map tag-termlist (reduce-terms L1 L2))))
   (put 'empty-termlist? '(sparse-termlist) empty-termlist?)
   'done)
 
