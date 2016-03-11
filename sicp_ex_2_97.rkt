@@ -26,7 +26,13 @@
 
 ; ex 2.97 reduce
 (define (reduce n d) (apply-generic 'reduce n d))
-
+; dispatch reduce-poly for polynomials
+; dispatch reduce-integers for integers, scheme-numbers
+; have make-rat call reduce
+; (for termlists, use reduce-term)
+(define (reduce-integers n d)
+  (let ((g (gcd n d)))
+    (list (/ n g) (/ d g))))
 
 ; generic termlist procedures
 (define (first-term L) (apply-generic 'first-term L))
@@ -628,6 +634,9 @@
   (put 'negate '(scheme-number) (lambda (x) (- x)))
   (put 'greatest-common-divisor '(scheme-number scheme-number)
        (lambda (x y) (gcd x y)))
+  ; ex 2.97b
+  (put 'reduce '(scheme-number scheme-number)
+       (lambda (x y) (reduce-integers x y)))
   (put 'make 'scheme-number
        (lambda (x) (tag x)))
   'done)
@@ -671,6 +680,7 @@
   (put 'my-sin '(integer) (lambda (x) (make-real (sin x))))
   (put 'my-cos '(integer) (lambda (x) (make-real (cos x))))
   (put 'my-sqrt '(integer) my-sqrt)
+  (put 'reduce '(integer integer) (lambda (x y) (reduce-integers x y)))
   'done)
 
 (define (make-integer n)
@@ -685,7 +695,9 @@
   (define (numer x) (car x))
   (define (denom x) (cdr x))
   (define (make-rat n d)
-    (cons n d))
+    ; ex 2.97b: reduce n and d
+    (let ((r (reduce n d)))
+      (cons (car r) (cadr r))))
     ;(if (and (integer? n) (integer? d))
     ;    (let ((g (gcd n d)))
     ;      (cons (/ n g) (/ d g)))
