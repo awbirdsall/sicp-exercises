@@ -247,30 +247,52 @@
       ; convert termlist to list of coefficients to pass to
       ; gcd-coeff-list.
       ; dense termlist is already list of coeff, but prune out 0s
-      (define (prune-zeros L1)
-        (if (null? L1) L1
-            (if (eq? 0 (car L1))
-                (prune-zeros (cdr L1))
-                (cons (car L1) (prune-zeros (cdr L1))))))
       (gcd-coeff-list (prune-zeros L1)))
-    (define (gcd-coeff-list xx)
-      (cond ((null? xx) (make-integer 1)) ; not sure best way to treat?
-            ; edge case starting with list length one
-            ((null? (cdr xx)) (car xx))
-            ; list length two is terminating step
-            ((null? (cddr xx)) (greatest-common-divisor
-                                         (car xx)
-                                         (cadr xx)))
-            ; otherwise gcd of list is gcd of (gcd of first two terms)
-            ; and remainder of terms.
-            (else (let ((gcd-first-two
-                         (greatest-common-divisor (car xx) (cadr xx))))
-                    (gcd-coeff-list (cons gcd-first-two (cddr xx)))))))
+
     (let* ((unfactored-gcd-terms (pseudogcd-terms L1 L2))
            (scalar-gcd-termlist
             (make-termlist (list
                             (make-term 0 (gcd-coeffs unfactored-gcd-terms))))))
       (car (div-terms unfactored-gcd-terms scalar-gcd-termlist))))
+  (define (gcd-coeff-list xx)
+    (cond ((null? xx) (make-integer 1)) ; not sure best way to treat?
+          ; edge case starting with list length one
+          ((null? (cdr xx)) (car xx))
+          ; list length two is terminating step
+          ((null? (cddr xx)) (greatest-common-divisor
+                              (car xx)
+                              (cadr xx)))
+          ; otherwise gcd of list is gcd of (gcd of first two terms)
+          ; and remainder of terms.
+          (else (let ((gcd-first-two
+                       (greatest-common-divisor (car xx) (cadr xx))))
+                  (gcd-coeff-list (cons gcd-first-two (cddr xx)))))))
+  (define (prune-zeros L1)
+    (if (null? L1) L1
+        (if (eq? 0 (car L1))
+            (prune-zeros (cdr L1))
+            (cons (car L1) (prune-zeros (cdr L1))))))
+  ; ex 2.97
+  (define (reduce-terms n d)
+    (let* ((nd-gcd (gcd-terms n d))
+           (larger-order (if (> (dense-order (first-term n))
+                                (dense-order (first-term d)))
+                             (dense-order (first-term n))
+                             (dense-order (first-term d))))
+           (int-factor (exp (dense-coeff (first-term nd-gcd))
+                            (add (make-integer 1)
+                                 (sub (make-integer larger-order)
+                                      (make-integer (dense-order (first-term nd-gcd)))))))
+           (int-factor-termlist (make-termlist
+                                 (list (make-term 0 int-factor))))
+           (n-large-coeff (car (div-terms (mul-terms n int-factor-termlist) nd-gcd)))
+           (d-large-coeff (car (div-terms (mul-terms d int-factor-termlist) nd-gcd)))
+           (coeff-gcd (gcd-coeff-list (append (prune-zeros n-large-coeff)
+                                              (prune-zeros d-large-coeff))))
+           (coeff-gcd-termlist
+            (make-termlist (list (make-term 0 coeff-gcd)))))
+      (list (car (div-terms n-large-coeff coeff-gcd-termlist))
+            (car (div-terms d-large-coeff coeff-gcd-termlist)))))
   ; interface to rest of system
   (define (tag-term L) (attach-tag 'dense-term L))
   (define (tag-termlist L) (attach-tag 'dense-termlist L))
@@ -300,6 +322,8 @@
        (lambda (L1 L2) (tag-termlist (pseudoremainder-terms L1 L2))))
   (put 'gcd-terms '(dense-termlist dense-termlist)
        (lambda (L1 L2) (tag-termlist (gcd-terms L1 L2))))
+  (put 'reduce-terms '(dense-termlist dense-termlist)
+       (lambda (L1 L2) (map tag-termlist (reduce-terms L1 L2))))
   (put 'adjoin '(dense-term dense-termlist)
        (lambda (term termlist)
          (tag-termlist (adjoin-term term termlist))))
