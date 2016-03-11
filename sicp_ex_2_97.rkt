@@ -24,6 +24,9 @@
 ;          (b) modify gcd-terms to reduce result (divide by coeff gcd)
 (define (greatest-common-divisor a b) (apply-generic 'greatest-common-divisor a b))
 
+; ex 2.97 reduce
+(define (reduce n d) (apply-generic 'reduce n d))
+
 
 ; generic termlist procedures
 (define (first-term L) (apply-generic 'first-term L))
@@ -98,6 +101,11 @@
     (if (same-variable? (variable p1) (variable p2))
         (make-poly (variable p1) (gcd-terms (term-list p1) (term-list p2)))
         (error "Polys not in same var -- GCD-POLY" (list p1 p2))))
+  (define (reduce-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (map (lambda (t) (make-poly (variable p1) t))
+             (reduce-terms (term-list p1) (term-list p2)))
+        (error "Polys not in same var -- GCD-POLY" (list p1 p2))))
   ;; interface to the rest of the system
   (define (tag p) (attach-tag 'polynomial p))
   (put 'add '(polynomial polynomial)
@@ -113,6 +121,8 @@
        (lambda (p1 p2) (tag (sub-poly p1 p2))))
   (put 'greatest-common-divisor '(polynomial polynomial)
        (lambda (p1 p2) (tag (gcd-poly p1 p2))))
+  (put 'reduce '(polynomial polynomial)
+       (lambda (p1 p2) (map tag (reduce-poly p1 p2))))
   (put 'make 'polynomial
        (lambda (var terms) (tag (make-poly var terms))))
   (put '=zero? '(polynomial) =zero-poly?)
