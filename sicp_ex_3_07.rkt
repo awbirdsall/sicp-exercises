@@ -12,19 +12,23 @@
   (define (balance-query)
     balance)
   (define (dispatch pwd-attempt m)
-    (cond ((not (eq? pwd-attempt pwd))
-           ; embed in lambda because dispatch returns
-           ; function of one argument
-           (lambda x "Incorrect password"))
-          ((eq? m 'withdraw) withdraw)
-          ((eq? m 'deposit) deposit)
-          ((eq? m 'balance) (balance-query))
+    (define (require-pwd f)
+      (if (eq? pwd-attempt pwd)
+          f
+          (error "Incorrect password")))
+    (cond ((eq? m 'withdraw) (require-pwd withdraw))
+          ((eq? m 'deposit) (require-pwd deposit))
+          ((eq? m 'balance) ((require-pwd balance-query)))
+          ((eq? m 'check-pwd) (require-pwd #t))
           (else (error "Unknown request -- MAKE-ACCOUNT"
                        m))))
   dispatch)
 
-; this doesn't work. it only makes a new account that initially
-; has the same balance as the `joint-acc`. Need to access state
-; of `joint-acc`.
+; make-joint needs to return a make-account procedure with
+; the same local state for `balance` as `joint-acc`, but
+; a different password. Also needs to be wrapped inside a
+; check for the correct joint-acc joint-pwd.
 (define (make-joint joint-acc joint-pwd new-pwd)
-  (make-account (joint-acc joint-pwd 'balance) new-pwd))
+  (if (joint-acc joint-pwd 'check-pwd)
+      joint-acc
+      "Incorrect password"))
