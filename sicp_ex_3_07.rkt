@@ -25,10 +25,17 @@
   dispatch)
 
 ; make-joint needs to return a make-account procedure with
-; the same local state for `balance` as `joint-acc`, but
-; a different password. Also needs to be wrapped inside a
-; check for the correct joint-acc joint-pwd.
+; the same local state for `balance` as `joint-acc`. New
+; password is implemented as wrapper around call to `joint-
+; acc`. Check for correct joint-acc pwd at creation -- better
+; to fail up front than within call to joint-acc. Note that
+; it's possible to make multiple joint accounts, spinning off
+; either from the original account or a previous spin-off.
 (define (make-joint joint-acc joint-pwd new-pwd)
+  (define (dispatch pwd-attempt m)
+    (if (eq? pwd-attempt new-pwd)
+        (joint-acc joint-pwd m)
+        (error "Incorrect password")))
   (if (joint-acc joint-pwd 'check-pwd)
-      joint-acc
-      "Incorrect password"))
+      dispatch
+      (error "Incorrect password")))
