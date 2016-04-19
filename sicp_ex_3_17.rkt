@@ -1,0 +1,28 @@
+#lang planet neil/sicp
+(define (count-pairs x)
+  (define (last-pair x)
+    (if (null? (cdr x))
+        x
+        (last-pair (cdr x))))
+  (define (my-append! x y)
+    (if (null? x)
+        y
+        (begin (set-cdr! (last-pair x) y)
+               x)))
+  (define (is-member? x l)
+    (cond ((null? l) #f)
+          ((eq? x (car l) #t))
+          (else (is-member? x (cdr l)))))
+  (define (count-pairs-aux x aux)
+    (cond ((not (pair? x)) 0)
+          ((not (is-member? x aux))
+           (my-append! aux x)
+           (+ (count-pairs-aux (car x) aux)
+              (count-pairs-aux (cdr x) aux)
+              1))
+          (else
+           (my-append! aux x)
+           (+ (count-pairs-aux (car x) aux)
+              (count-pairs-aux (cdr x) aux)
+              0))))
+  (count-pairs-aux x '()))
