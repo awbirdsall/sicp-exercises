@@ -11,10 +11,18 @@
 (define (has-cycle? x)
   ; Search down each branch until reach leaf, or something
   ; previously encountered on same branch.
-  ; More general search for cycle than "whether a program that
-  ; tried to find the end of the list by taking successive cdrs
-  ; would go into an infinite loop" in exercise statement --
-  ; can have structure where cdrs terminate, but cycle in cars.
+  ; Choose to implement more general search for cycle than
+  ; "whether a program that tried to find the end of the list
+  ; by taking successive cdrs would go into an infinite loop"
+  ; in exercise statement -- can have structure where cdrs
+  ; terminate, but cycle in cars.
+  ; 
+  ; Example from wizardbook.wordpress.com:
+  ; (define l4 (list 'a 'b 'c 'd 'e))
+  ; (set-car! (cdddr l4) (cddr 14))
+  ; 
+  ; I would say this has a cycle; the SICP definition disagrees.
+
   (define (has-cycle-aux x aux)
     (cond ((not (pair? x)) #f)
           ((is-member? x aux) #t)
